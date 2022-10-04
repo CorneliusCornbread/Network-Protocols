@@ -113,6 +113,7 @@ def do_http_exchange(host, port, resource, file_name):
     :param file_name: string (str) containing name of file in which to store the retrieved resource
     :return: the status code
     :rtype: int
+    :author: Jack Rosenbecker
     """
 
     # Setup the TCP connection
@@ -175,6 +176,7 @@ def read_line(data_socket):
                     data connection (either a client socket or a server data socket), not a tcp
                     server's listening socket.]
     :returns: bytes object containing all bytes in the line except the CRLF
+    :author: Lucas Peterson
     """
     return bytes()
 
@@ -185,6 +187,7 @@ def parse_status_line(line_bytes):
 
     :param: line_bytes: The bytes within the line
     :returns: tuple containing the version, status code, and status message.
+    :author: Lucas Peterson
     """
     return '', 0, ''
 
@@ -195,6 +198,7 @@ def parse_key_value(line_bytes):
 
     :param: line_bytes: The bytes within the line
     :returns: tuple containing the key and value.
+    :author: Jack Rosenbecker
     """
     return '', ''
 
@@ -205,6 +209,7 @@ def is_chunked(key_values):
 
     :param: key_values: The dictionary of key value pairs in the response header
     :returns: True if message is chunked, else False.
+    :author: Jack Rosenbecker
     """
     return False
 
@@ -215,6 +220,7 @@ def get_content_length(key_values):
 
     :param: key_values: The dictionary of key value pairs in the response header
     :returns: The content length of the data.
+    :author: Jack Rosenbecker
     """
     return 0
 
@@ -227,6 +233,7 @@ def read_body(data_socket, key_values):
                     data connection (either a client socket or a server data socket), not a tcp
                     server's listening socket.]
     :returns: the data within the body.
+    :author: Kade Swenson
     """
     return ''
 
@@ -239,6 +246,7 @@ def read_chunk_length(data_socket):
                     data connection (either a client socket or a server data socket), not a tcp
                     server's listening socket.]
     :returns: the length of the chunk
+    :author: Kade Swenson
     """
     return 0
 
@@ -252,6 +260,7 @@ def read_data(data_socket, content_length):
                     server's listening socket.]
     :param: content_length: The number of bytes in the message
     :returns: data within the message.
+    :author: Kade Swenson
     """
     return ''
 
