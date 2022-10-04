@@ -4,8 +4,8 @@
 - Fall 202N
 - Lab N
 - Names:
-  -
-  -
+  - 
+  - 
 
 An HTTP client
 
@@ -15,6 +15,7 @@ Introduction: (Describe the lab in your own words)
 
 
 Summary: (Summarize your experience with the lab, what you learned, what you liked,what you disliked, and any suggestions you have for improvement)
+
 
 
 
@@ -35,10 +36,10 @@ def main():
     get_http_resource('https://www.httpvshttps.com/check.png', 'check.png')
 
     # this resource request should result in "chunked" data transfer
-    get_http_resource('https://www.httpvshttps.com/', 'index.html')
+    get_http_resource('https://www.httpvshttps.com/','index.html')
 
     # this resource request should result in "chunked" data transfer
-    # get_http_resource('https://www.youtube.com/', 'youtube.html')
+    #get_http_resource('https://www.youtube.com/', 'youtube.html')
 
     # If you find fun examples of chunked or Content-Length pages, please share them with us!
 
@@ -120,12 +121,12 @@ def do_http_exchange(host, port, resource, file_name):
     # Request the resource and write the data to the file
 
     # Don't forget to close the tcp_socket when finished
-
+ 
     return 500  # Replace this "server error" with the actual status code
-
 
 # Define additional functions here as necessary
 # Don't forget docstrings and :author: tags
+
 
 def next_bytes(data_socket, n_bytes=1):
     """
@@ -150,12 +151,20 @@ def read_header(data_socket):
     """
     Reads header of HTTP response.
 
-    :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
-                    data connection (either a client socket or a server data socket), not a tcp
-                    server's listening socket.]
-    :return: dictionary of all key value pairs read in the header.
+    :param: data_socket: The socket to read from. The data_socket argument should be an open tcp data connection (
+    either a client socket or a server data socket), not a tcp server's listening socket.]
+    :return: tuple containing the version, status code, status message, and a dictionary of all key value pairs read in
+    the header.
+    :author: Lucas Peterson
     """
-    return None
+    status = parse_status_line(read_line(data_socket))
+    key_values = dict()
+    line = read_line(data_socket)
+    while len(line) > 0:
+        pair = parse_key_value(line)
+        key_values[pair[0]] = pair[1]
+        line = read_line(data_socket)
+    return status[0], status[1], status[2], key_values
 
 
 def read_line(data_socket):
@@ -167,7 +176,7 @@ def read_line(data_socket):
                     server's listening socket.]
     :returns: bytes object containing all bytes in the line except the CRLF
     """
-    return None
+    return bytes()
 
 
 def parse_status_line(line_bytes):
@@ -210,16 +219,28 @@ def get_content_length(key_values):
     return 0
 
 
-def read_chunk_length(data_socket):
+def read_body(data_socket, key_values):
     """
-    Reads the data within a single chunk
+    Reads the body
 
     :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
                     data connection (either a client socket or a server data socket), not a tcp
                     server's listening socket.]
-    :returns: data within a single chunk.
+    :returns: the data within the body.
     """
     return ''
+
+
+def read_chunk_length(data_socket):
+    """
+    Reads the chunk length
+
+    :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
+                    data connection (either a client socket or a server data socket), not a tcp
+                    server's listening socket.]
+    :returns: the length of the chunk
+    """
+    return 0
 
 
 def read_data(data_socket, content_length):
