@@ -165,7 +165,12 @@ def read_header(data_socket):
         pair = parse_key_value(line)
         key_values[pair[0]] = pair[1]
         line = read_line(data_socket)
-    return status[0], status[1], status[2], key_values
+
+    status_code = status[1]
+    if 'uri-host' not in key_values.keys():
+        status_code = 400 # (Bad Request)
+
+    return status[0], status_code, status[2], key_values
 
 
 def read_line(data_socket):
@@ -178,7 +183,14 @@ def read_line(data_socket):
     :returns: bytes object containing all bytes in the line except the CRLF
     :author: Lucas Peterson
     """
-    return bytes()
+    byte = next_bytes(data_socket)
+    next_byte = next_bytes(data_socket)
+    line = bytes()
+    while byte + next_byte != b'\x0d\x0a':
+        line = line + byte
+        byte = next_byte
+        next_byte = next_bytes(data_socket)
+    return line
 
 
 def parse_status_line(line_bytes):
@@ -189,7 +201,8 @@ def parse_status_line(line_bytes):
     :returns: tuple containing the version, status code, and status message.
     :author: Lucas Peterson
     """
-    return '', 0, ''
+    line = line_bytes.decode('ascii').split(' ')
+    return line[0], int(line[1]), line[2]
 
 
 def parse_key_value(line_bytes):
