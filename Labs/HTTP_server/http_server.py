@@ -27,6 +27,7 @@ import threading
 import os
 import mimetypes
 import datetime
+from typing import Dict
 
 
 def main():
@@ -76,7 +77,7 @@ def handle_request(request_socket):
     :param request_socket: socket representing TCP connection from the HTTP client_socket
     :return: None
     """
-
+    # TODO Create request object, creates a response object and gives it the request. Sends the response to client.
     pass  # Replace this line with your code
 
 
@@ -88,10 +89,11 @@ def handle_request(request_socket):
 
 class request:
     def __init__(self, server_socket):
-        self.type = ''
-        self.resource = ''
-        self.version = 1.0
-        self.headers = dict()
+        header = self.read_header(server_socket)
+        self.type : str = header[0]
+        self.resource : str = header[1]
+        self.version : str = header[2]
+        self.headers : Dict = header[3]
 
 
     def next_bytes(self, server_socket, n_bytes=1):
@@ -157,16 +159,16 @@ class request:
         return line
 
 
-        def parse_request_line(line_bytes):
-            """
-            Reads the status line of the HTTP response.
+    def parse_request_line(line_bytes):
+        """
+        Reads the status line of the HTTP response.
 
-            :param: line_bytes: The bytes within the line
-            :returns: tuple containing the version, status code, and status message.
-            :author: Lucas Peterson
-            """
-            line = line_bytes.decode('ascii').split(' ')
-            return line[0], int(line[1]), line[2]
+        :param: line_bytes: The bytes within the line
+        :returns: tuple containing the version, status code, and status message.
+        :author: Lucas Peterson
+        """
+        line = line_bytes.decode('ascii').split(' ')
+        return line[0], int(line[1]), line[2]
 
 
     def parse_resource_line(line_bytes):
@@ -194,20 +196,34 @@ class request:
         return line_list[0], ''.join(line_list[1::])
 
 
-class responce:
+def get_time():
+    timestamp = datetime.datetime.utcnow()
+    timestamp = timestamp.strftime('%a, %d %b %Y %H:%M:%S GMT')
+    return timestamp.encode("ASCII")
+
+
+class response:
     def __init__(self, client_request : request):
-        self.version = 1.0
+        self.version = 'HTTP/1.1'
         status_tuple = self.get_status(client_request)
         self.status_code = status_tuple[0]
         self.status = status_tuple[1]
-        self.headers = dict()
+        self.headers = self.add_headers(client_request)
 
 
     def get_status(self, client_request : request) -> tuple:
+        # TODO Gets status code and status message based onb client request object.
         return 400, 'Bad Request'
 
 
+    def add_headers(self, client_response) -> Dict:
+        headers = dict()
+        timestamp_in_bytes = get_time()
+        return headers
+
+
     def send(self, server_socket):
+        # TODO Sends header bytes based on object variables.
         pass
 
 
