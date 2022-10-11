@@ -235,7 +235,18 @@ def read_body(data_socket, key_values):
     :returns: the data within the body.
     :author: Kade Swenson
     """
-    return ''
+    message = b''
+    if is_chunked(key_values):
+        size = read_chunk_length(data_socket)
+        while size > 0:
+            message += next_bytes(data_socket, size)
+
+            # This line throws away the carriage return line feed at the end of data
+            next_bytes(data_socket, 2)
+            size = read_chunk_length(data_socket)
+    else:
+        message = next_bytes(data_socket, get_content_length(key_values))
+    return message
 
 
 def read_chunk_length(data_socket):
@@ -248,12 +259,15 @@ def read_chunk_length(data_socket):
     :returns: the length of the chunk
     :author: Kade Swenson
     """
-    return 0
+    size_in_bytes = read_line(data_socket)
+    size_in_text = size_in_bytes.decode("ASCII")
+    size_in_int = int(size_in_text, 16)
+    return size_in_int
 
 
 def read_data(data_socket, content_length):
     """
-    Reads the data within a entire message.
+    Reads the data within an entire message.
 
     :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
                     data connection (either a client socket or a server data socket), not a tcp
@@ -262,7 +276,9 @@ def read_data(data_socket, content_length):
     :returns: data within the message.
     :author: Kade Swenson
     """
-    return ''
+
+    # After talking with the group this function is not needed because read_body does the function of this
+
 
 
 main()
