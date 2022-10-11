@@ -25,6 +25,7 @@ Summary: (Summarize your experience with the lab, what you learned, what you lik
 import socket
 import re
 import ssl
+from typing import Dict
 
 
 def main():
@@ -36,10 +37,10 @@ def main():
     get_http_resource('https://www.httpvshttps.com/check.png', 'check.png')
 
     # this resource request should result in "chunked" data transfer
-    get_http_resource('https://www.httpvshttps.com/','index.html')
+    get_http_resource('https://www.httpvshttps.com/', 'index.html')
 
     # this resource request should result in "chunked" data transfer
-    #get_http_resource('https://www.youtube.com/', 'youtube.html')
+    # get_http_resource('https://www.youtube.com/', 'youtube.html')
 
     # If you find fun examples of chunked or Content-Length pages, please share them with us!
 
@@ -120,13 +121,36 @@ def do_http_exchange(host, port, resource, file_name):
     tcp_socket = setup_connection(host, port)
 
     # Request the resource and write the data to the file
+    request = create_request(host, resource)
+
+    bin_req = request.encode("ascii")
+    tcp_socket.sendall(bin_req)
+
+    response_header = read_header(tcp_socket)
+    response_data = read_body(tcp_socket, response_header[3])
+
+    dump_bytes_to_file(f"body-{resource}.txt".replace('\\', '').replace('/', ''), response_data)
 
     # Don't forget to close the tcp_socket when finished
- 
-    return 500  # Replace this "server error" with the actual status code
+    tcp_socket.close()
+
+    return response_header[1]
+
 
 # Define additional functions here as necessary
 # Don't forget docstrings and :author: tags
+
+
+def create_request(host, resource):
+    """
+    Creates a GET request based on the host and requested resource
+    :param host: host server to get resource from
+    :param resource: requested resource
+    :return: returns a GET request as a string
+    :author: Jack Rosenbecker
+    """
+    request = f"GET {resource} HTTP/1.1\r\nHost: {host}\r\n\r\n"
+    return request
 
 
 def next_bytes(data_socket, n_bytes=1):
@@ -168,7 +192,7 @@ def read_header(data_socket):
 
     status_code = status[1]
     if 'uri-host' not in key_values.keys():
-        status_code = 400 # (Bad Request)
+        status_code = 400  # (Bad Request)
 
     return status[0], status_code, status[2], key_values
 
@@ -205,7 +229,7 @@ def parse_status_line(line_bytes):
     return line[0], int(line[1]), line[2]
 
 
-def parse_key_value(line_bytes):
+def parse_key_value(line_bytes: bytes) -> tuple:
     """
     Reads a key value line of the HTTP response.
 
@@ -213,10 +237,13 @@ def parse_key_value(line_bytes):
     :returns: tuple containing the key and value.
     :author: Jack Rosenbecker
     """
-    return '', ''
+    line_str = line_bytes.decode("ascii")
+    line_list = line_str.split(":")
+
+    return line_list[0], (''.join(line_list[1::])).replace(' ', '')
 
 
-def is_chunked(key_values):
+def is_chunked(key_values: dict) -> bool:
     """
     Checks if response is chunked
 
@@ -224,10 +251,10 @@ def is_chunked(key_values):
     :returns: True if message is chunked, else False.
     :author: Jack Rosenbecker
     """
-    return False
+    return key_values.get("Transfer-Encoding") == "chunked"
 
 
-def get_content_length(key_values):
+def get_content_length(key_values: dict) -> int:
     """
     Gets the content length from key values
 
@@ -235,7 +262,11 @@ def get_content_length(key_values):
     :returns: The content length of the data.
     :author: Jack Rosenbecker
     """
-    return 0
+    header_length = key_values.get("Content-Length")
+    if header_length is None:
+        return -1
+
+    return int(header_length)
 
 
 def read_body(data_socket, key_values):
@@ -248,7 +279,19 @@ def read_body(data_socket, key_values):
     :returns: the data within the body.
     :author: Kade Swenson
     """
-    return ''
+    message = b''
+    if is_chunked(key_values):
+        size = read_chunk_length(data_socket)
+        while size > 0:
+            for i in range(size):
+                message += next_bytes(data_socket)
+
+            # This line throws away the carriage return line feed at the end of data
+            next_bytes(data_socket, 2)
+            size = read_chunk_length(data_socket)
+    else:
+        message = next_bytes(data_socket, get_content_length(key_values))
+    return message
 
 
 def read_chunk_length(data_socket):
@@ -261,21 +304,23 @@ def read_chunk_length(data_socket):
     :returns: the length of the chunk
     :author: Kade Swenson
     """
-    return 0
+    size_in_bytes = read_line(data_socket)
+    size_in_text = size_in_bytes.decode("ascii")
+    size_in_int = int(size_in_text, 16)
+    return size_in_int
 
 
-def read_data(data_socket, content_length):
+def dump_bytes_to_file(name: str, file_bytes: bytes):
     """
-    Reads the data within a entire message.
+    Dumps bytes to a file.
+    Will overwrite any files with the same name.
 
-    :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
-                    data connection (either a client socket or a server data socket), not a tcp
-                    server's listening socket.]
-    :param: content_length: The number of bytes in the message
-    :returns: data within the message.
-    :author: Kade Swenson
+    :param: name: name of the file with the extension
+    :param: bytes: actual contents of the file to write
+    :author: Jack Rosenbecker
     """
-    return ''
+    with open(name, 'wb') as f:
+        f.write(file_bytes)
 
 
 main()
