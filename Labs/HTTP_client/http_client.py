@@ -1,25 +1,25 @@
 """
 - NOTE: REPLACE 'N' Below with your section, year, and lab number
-- CS2911 - 0NN
-- Fall 202N
-- Lab N
+- CS2911 - 011
+- Fall 2022
+- Lab 3
 - Names:
-  - 
-  - 
+  - Jack Rosenbecker
+  - Lucas Peterson
+  - Kade Swenson
 
 An HTTP client
 
 Introduction: (Describe the lab in your own words)
-
+Create an HTTP client that successfully gets data via HTTP from a remote server
 
 
 
 Summary: (Summarize your experience with the lab, what you learned, what you liked,what you disliked, and any suggestions you have for improvement)
-
-
-
-
-
+There were a lot of small details with this lab that needed to be worked out for this to work properly. Though once worked out it all came together.
+There is some behaviour as well that we didn't fully understand, like how we'd only sometimes receive a chunk of bytes at a time.
+Kinda challenging but also really fun, though what should be explained is how the sockets in python behave. I'm used to C# sockets, which will refuse to
+return execution until it has recieved the given number of bytes passed to it. Unlike python, which behaves a little differently if there's no data.
 """
 
 import socket
