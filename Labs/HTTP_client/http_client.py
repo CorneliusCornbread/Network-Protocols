@@ -105,7 +105,6 @@ def setup_connection(host, port):
 def do_http_exchange(host, port, resource, file_name):
     """
     Get an HTTP resource from a server
-
     :param str host: the ASCII domain name or IP address of the server machine (i.e., host) to connect to
     :param int port: port number to connect to on server host
     :param str resource: the ASCII path/name of resource to get. This is everything in the URL after the domain name,
@@ -120,10 +119,22 @@ def do_http_exchange(host, port, resource, file_name):
     tcp_socket = setup_connection(host, port)
 
     # Request the resource and write the data to the file
+    request = f"""GET {resource} HTTP/1.1\r
+    Host: {host}\r
+    User-Agent: python-script\r
+    Accept: */*\r\n"""
+
+    bin_req = request.encode("ascii")
+    tcp_socket.send(bin_req)
+
+    response_data = read_header(tcp_socket)
+
+
 
     # Don't forget to close the tcp_socket when finished
- 
-    return 500  # Replace this "server error" with the actual status code
+
+    return response_data[1]  # Replace this "server error" with the actual status code
+
 
 # Define additional functions here as necessary
 # Don't forget docstrings and :author: tags
@@ -205,77 +216,79 @@ def parse_status_line(line_bytes):
     return line[0], int(line[1]), line[2]
 
 
-def parse_key_value(line_bytes):
+def parse_key_value(line_bytes: bytes) -> tuple:
     """
     Reads a key value line of the HTTP response.
-
     :param: line_bytes: The bytes within the line
     :returns: tuple containing the key and value.
     :author: Jack Rosenbecker
     """
-    return '', ''
+    line_str = line_bytes.decode("ascii")
+    line_list = line_str.split(":")
+
+    return line_list[0], ''.join(line_list[1::])
 
 
-def is_chunked(key_values):
+def is_chunked(key_values: dict) -> bool:
     """
     Checks if response is chunked
-
     :param: key_values: The dictionary of key value pairs in the response header
     :returns: True if message is chunked, else False.
     :author: Jack Rosenbecker
     """
-    return False
+    return key_values.get("Transfer-Encoding") == "chunked"
 
 
-def get_content_length(key_values):
+def get_content_length(key_values: dict) -> int:
     """
     Gets the content length from key values
-
     :param: key_values: The dictionary of key value pairs in the response header
     :returns: The content length of the data.
     :author: Jack Rosenbecker
     """
-    return 0
+    header_length = key_values.get("Content-Length")
+    if header_length is None:
+        return -1
+
+    return int(header_length)
 
 
 def read_body(data_socket, key_values):
     """
     Reads the body
-
     :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
                     data connection (either a client socket or a server data socket), not a tcp
                     server's listening socket.]
     :returns: the data within the body.
     :author: Kade Swenson
     """
-    return ''
+    message = b''
+    if is_chunked(key_values):
+        size = read_chunk_length(data_socket)
+        while size > 0:
+            message += next_bytes(data_socket, size)
+
+            # This line throws away the carriage return line feed at the end of data
+            next_bytes(data_socket, 2)
+            size = read_chunk_length(data_socket)
+    else:
+        message = next_bytes(data_socket, get_content_length(key_values))
+    return message
 
 
 def read_chunk_length(data_socket):
     """
     Reads the chunk length
-
     :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
                     data connection (either a client socket or a server data socket), not a tcp
                     server's listening socket.]
     :returns: the length of the chunk
     :author: Kade Swenson
     """
-    return 0
-
-
-def read_data(data_socket, content_length):
-    """
-    Reads the data within a entire message.
-
-    :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
-                    data connection (either a client socket or a server data socket), not a tcp
-                    server's listening socket.]
-    :param: content_length: The number of bytes in the message
-    :returns: data within the message.
-    :author: Kade Swenson
-    """
-    return ''
+    size_in_bytes = read_line(data_socket)
+    size_in_text = size_in_bytes.decode("ASCII")
+    size_in_int = int(size_in_text, 16)
+    return size_in_int
 
 
 main()
