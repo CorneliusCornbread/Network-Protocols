@@ -25,6 +25,7 @@ Summary: (Summarize your experience with the lab, what you learned, what you lik
 import socket
 import re
 import ssl
+from typing import Dict
 
 
 def main():
@@ -36,10 +37,10 @@ def main():
     get_http_resource('https://www.httpvshttps.com/check.png', 'check.png')
 
     # this resource request should result in "chunked" data transfer
-    get_http_resource('https://www.httpvshttps.com/','index.html')
+    get_http_resource('https://www.httpvshttps.com/', 'index.html')
 
     # this resource request should result in "chunked" data transfer
-    #get_http_resource('https://www.youtube.com/', 'youtube.html')
+    # get_http_resource('https://www.youtube.com/', 'youtube.html')
 
     # If you find fun examples of chunked or Content-Length pages, please share them with us!
 
@@ -120,10 +121,22 @@ def do_http_exchange(host, port, resource, file_name):
     tcp_socket = setup_connection(host, port)
 
     # Request the resource and write the data to the file
+    request = f"""GET {resource} HTTP/1.1\r
+Host: {host}\r
+User-Agent: python-script\r
+Accept: */*\r\n"""
+
+    bin_req = request.encode("ascii")
+    tcp_socket.send(bin_req)
+
+    response_data = read_header(tcp_socket)
+
+
 
     # Don't forget to close the tcp_socket when finished
- 
+
     return 500  # Replace this "server error" with the actual status code
+
 
 # Define additional functions here as necessary
 # Don't forget docstrings and :author: tags
@@ -205,7 +218,7 @@ def parse_status_line(line_bytes):
     return line[0], int(line[1]), line[2]
 
 
-def parse_key_value(line_bytes):
+def parse_key_value(line_bytes: bytes) -> tuple:
     """
     Reads a key value line of the HTTP response.
 
@@ -213,10 +226,13 @@ def parse_key_value(line_bytes):
     :returns: tuple containing the key and value.
     :author: Jack Rosenbecker
     """
-    return '', ''
+    line_str = line_bytes.decode("ascii")
+    line_list = line_str.split(":")
+
+    return line_list[0], ''.join(line_list[1::])
 
 
-def is_chunked(key_values):
+def is_chunked(key_values: dict) -> bool:
     """
     Checks if response is chunked
 
@@ -224,10 +240,10 @@ def is_chunked(key_values):
     :returns: True if message is chunked, else False.
     :author: Jack Rosenbecker
     """
-    return False
+    return key_values.get("Transfer-Encoding") == "chunked"
 
 
-def get_content_length(key_values):
+def get_content_length(key_values: dict) -> int:
     """
     Gets the content length from key values
 
@@ -235,7 +251,11 @@ def get_content_length(key_values):
     :returns: The content length of the data.
     :author: Jack Rosenbecker
     """
-    return 0
+    header_length = key_values.get("Content-Length")
+    if header_length is None:
+        return -1
+
+    return int(header_length)
 
 
 def read_body(data_socket, key_values):
@@ -276,6 +296,17 @@ def read_data(data_socket, content_length):
     :author: Kade Swenson
     """
     return ''
+
+
+def dump_text_to_file(name, txt):
+    """
+    Author: Jack
+    Dumps an ascii string to a text file.
+    Names the file with the given name automatically adds the correct extension.
+    Will overwrite any files with the same name.
+    """
+    with open(name+".txt", 'w') as f:
+        f.write(txt)
 
 
 main()
