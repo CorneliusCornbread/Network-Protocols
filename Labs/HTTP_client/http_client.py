@@ -129,7 +129,12 @@ def do_http_exchange(host, port, resource, file_name):
     response_header = read_header(tcp_socket)
     response_data = read_body(tcp_socket, response_header[3])
 
-    dump_bytes_to_file(f"body-{resource}.txt".replace('\\', '').replace('/', ''), response_data)
+    file_name == resource
+
+    if (resource == '\\'):
+        file_name = "index.html"
+
+    dump_bytes_to_file(file_name.replace('\\', '-').replace('/', '-'), response_data)
 
     # Don't forget to close the tcp_socket when finished
     tcp_socket.close()
@@ -290,7 +295,10 @@ def read_body(data_socket, key_values):
             next_bytes(data_socket, 2)
             size = read_chunk_length(data_socket)
     else:
-        message = next_bytes(data_socket, get_content_length(key_values))
+        length = get_content_length(key_values)
+
+        for i in range(length):
+            message += next_bytes(data_socket)
     return message
 
 
