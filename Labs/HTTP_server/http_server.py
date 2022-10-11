@@ -92,18 +92,18 @@ class request:
     """
     :author: Lucas Peterson
     """
-    def __init__(self, server_socket):
+    def __init__(self, request_socket):
         """
         :author: Lucas Peterson
         """
-        header = self.read_header(server_socket)
+        header = self.read_header(request_socket)
         self.type : str = header[0]
         self.resource : str = header[1]
         self.version : str = header[2]
         self.headers : Dict = header[3]
 
 
-    def next_bytes(self, server_socket, n_bytes=1):
+    def next_bytes(self, request_socket, n_bytes=1):
         """
         Read the next n bytes from the socket data_socket.
 
@@ -112,32 +112,34 @@ class request:
             until the bytes arrive.
         If the sender is done sending and is waiting for your response, this method blocks indefinitely.
 
-        :param: server_socket: The socket to read from. The server_socket argument should be an open tcp server connection (
-            either a client socket or a server data socket), not a tcp server's listening socket.]
+        :param: request_socket: The socket to read from. The request_socket argument should be an open tcp
+            request connection (either a client socket or a server data socket), not a tcp server's
+            listening socket.]
         :param: n_bytes: The number of bytes returned by the method.
         :return: the next n bytes, as a bytes object with multiple bytes in it
         :author: Lucas Peterson
         """
-        return server_socket.recv(n_bytes)
+        return request_socket.recv(n_bytes)
 
 
-    def read_header(self, server_socket):
+    def read_header(self, request_socket):
         """
         Reads header of HTTP request.
 
-        :param: server_socket: The socket to read from. The server_socket argument should be an open tcp server connection (
-            either a client socket or a server data socket), not a tcp server's listening socket.]
+        :param: request_socket: The socket to read from. The request_socket argument should be an open tcp
+            request connection (either a client socket or a server data socket), not a tcp server's
+            listening socket.]
         :return: tuple containing the version, status code, status message, and a dictionary of all key value pairs read in
         the header.
         :author: Lucas Peterson
         """
-        status = self.parse_status_line(read_line(server_socket))
+        status = self.parse_status_line(read_line(request_socket))
         key_values = dict()
-        line = self.read_line(server_socket)
+        line = self.read_line(request_socket)
         while len(line) > 0:
             pair = self.parse_key_value(line)
             key_values[pair[0]] = pair[1]
-            line = self.read_line(server_socket)
+            line = self.read_line(request_socket)
 
         status_code = status[1]
         if 'uri-host' not in key_values.keys():
@@ -146,23 +148,23 @@ class request:
         return status[0], status_code, status[2], key_values
 
 
-    def read_line(self, server_socket):
+    def read_line(self, request_socket):
         """
         Reads bytes in line until a CRLF is hit
 
-        :param: data_socket: The socket to read from. The data_socket argument should be an open tcp
-                        data connection (either a client socket or a server data socket), not a tcp
-                        server's listening socket.]
+        :param: request_socket: The socket to read from. The request_socket argument should be an open tcp
+            request connection (either a client socket or a server data socket), not a tcp server's
+            listening socket.]
         :returns: bytes object containing all bytes in the line except the CRLF
         :author: Lucas Peterson
         """
-        byte = self.next_bytes(server_socket)
-        next_byte = self.next_bytes(server_socket)
+        byte = self.next_bytes(request_socket)
+        next_byte = self.next_bytes(request_socket)
         line = bytes()
         while byte + next_byte != b'\x0d\x0a':
             line = line + byte
             byte = next_byte
-            next_byte = self.next_bytes(server_socket)
+            next_byte = self.next_bytes(request_socket)
         return line
 
 
