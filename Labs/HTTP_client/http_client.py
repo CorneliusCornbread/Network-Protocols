@@ -298,15 +298,17 @@ def read_data(data_socket, content_length):
     return ''
 
 
-def dump_text_to_file(name, txt):
+def dump_bytes_to_file(name, bytes):
     """
-    Author: Jack
-    Dumps an ascii string to a text file.
-    Names the file with the given name automatically adds the correct extension.
+    Dumps bytes to a file.
     Will overwrite any files with the same name.
+
+    :param: name: name of the file with the extension
+    :param: bytes: actual contents of the file to write
+    :author: Jack Rosenbecker
     """
-    with open(name+".txt", 'w') as f:
-        f.write(txt)
+    with open(name, 'wb') as f:
+        f.write(bytes)
 
 
 main()
