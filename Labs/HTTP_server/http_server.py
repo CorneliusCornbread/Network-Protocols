@@ -76,6 +76,7 @@ def handle_request(request_socket):
 
     :param request_socket: socket representing TCP connection from the HTTP client_socket
     :return: None
+    :author: Lucas Peterson
     """
     # TODO Create request object, creates a response object and gives it the request. Sends the response to client.
     pass  # Replace this line with your code
@@ -88,7 +89,13 @@ def handle_request(request_socket):
 
 
 class request:
+    """
+    :author: Lucas Peterson
+    """
     def __init__(self, server_socket):
+        """
+        :author: Lucas Peterson
+        """
         header = self.read_header(server_socket)
         self.type : str = header[0]
         self.resource : str = header[1]
@@ -197,14 +204,23 @@ class request:
 
 
 def get_time():
+    """
+    :author: Kade Swenson
+    """
     timestamp = datetime.datetime.utcnow()
     timestamp = timestamp.strftime('%a, %d %b %Y %H:%M:%S GMT')
     return timestamp.encode("ASCII")
 
 
 class response:
+    """
+    :authors: Lucas Peterson, Kade Swenson, and Jack Rosenbecker
+    """
     def __init__(self, client_request : request):
-        self.version = 'HTTP/1.1'
+        """
+        :authors: Lucas Peterson
+        """
+        self.version = '1.1'
         status_tuple = self.get_status(client_request)
         self.status_code = status_tuple[0]
         self.status = status_tuple[1]
@@ -212,17 +228,26 @@ class response:
 
 
     def get_status(self, client_request : request) -> tuple:
+        """
+        :author: Kade Swenson
+        """
         # TODO Gets status code and status message based onb client request object.
         return 400, 'Bad Request'
 
 
-    def add_headers(self, client_response) -> Dict:
+    def add_headers(self, client_request : request) -> Dict:
+        """
+        :author: Kade Swenson
+        """
         headers = dict()
         timestamp_in_bytes = get_time()
         return headers
 
 
     def send(self, server_socket):
+        """
+        :author: Jack Rosenbecker
+        """
         # TODO Sends header bytes based on object variables.
         pass
 
