@@ -1,11 +1,12 @@
 """
 - NOTE: REPLACE 'N' Below with your section, year, and lab number
 - CS2911 - 0NN
-- Fall 202N
-- Lab N
+- Fall 2022
+- Lab 4
 - Names:
-  - 
-  - 
+  - Lucas Peterson
+  - Jack Rosenbecker
+  - Kade Swenson
 
 An HTTP server
 
@@ -22,6 +23,7 @@ Summary: (Summarize your experience with the lab, what you learned, what you lik
 
 """
 
+import re
 import socket
 import threading
 import os
@@ -78,11 +80,10 @@ def handle_request(request_socket):
     :return: None
     :author: Lucas Peterson
     """
-    # TODO Create request object, creates a response object and gives it the request. Sends the response to client.
-    pass  # Replace this line with your code
+    req = request(request_socket)
+    res = response(req)
+    res.send(request_socket)
 
-
-# ** Do not modify code below this line.  You should add additional helper methods above this line.
 
 # Utility functions
 # You may use these functions to simplify your code.
@@ -90,17 +91,13 @@ def handle_request(request_socket):
 
 class request:
     """
+    Constructor reads a request header from a socket, and stores its context as the type, resource, version,
+    and headers (key values) instance variables.
+
     :author: Lucas Peterson
     """
-    def __init__(self, request_socket):
-        """
-        :author: Lucas Peterson
-        """
-        header = self.read_header(request_socket)
-        self.type : str = header[0]
-        self.resource : str = header[1]
-        self.version : str = header[2]
-        self.headers : Dict = header[3]
+    def __init__(self, request_socket : socket):
+        self.read_header(request_socket)
 
 
     def next_bytes(self, request_socket, n_bytes=1):
@@ -119,40 +116,41 @@ class request:
         :return: the next n bytes, as a bytes object with multiple bytes in it
         :author: Lucas Peterson
         """
-        return request_socket.recv(n_bytes)
+        n = 0
+        message = b''
+        while n < n_bytes:
+            message += request_socket.recv(1)
+            n += 1
+        return message
 
 
     def read_header(self, request_socket):
         """
-        Reads header of HTTP request.
+        Reads header of HTTP request and assigns values to request type, resource, version, and key values.
 
-        :param: request_socket: The socket to read from. The request_socket argument should be an open tcp
+        :param request_socket: The socket to read from. The request_socket argument should be an open tcp
             request connection (either a client socket or a server data socket), not a tcp server's
             listening socket.]
-        :return: tuple containing the version, status code, status message, and a dictionary of all key value pairs read in
-        the header.
         :author: Lucas Peterson
         """
-        status = self.parse_status_line(read_line(request_socket))
-        key_values = dict()
+        request = self.parse_request_line(self.read_line(request_socket))
+        self.headers = dict()
         line = self.read_line(request_socket)
         while len(line) > 0:
             pair = self.parse_key_value(line)
-            key_values[pair[0]] = pair[1]
+            self.headers[pair[0]] = pair[1]
             line = self.read_line(request_socket)
 
-        status_code = status[1]
-        if 'uri-host' not in key_values.keys():
-            status_code = 400 # (Bad Request)
-
-        return status[0], status_code, status[2], key_values
+        self.type = request[0]
+        self.resource = request[1]
+        self.version = request[2]
 
 
     def read_line(self, request_socket):
         """
         Reads bytes in line until a CRLF is hit
 
-        :param: request_socket: The socket to read from. The request_socket argument should be an open tcp
+        :param request_socket: The socket to read from. The request_socket argument should be an open tcp
             request connection (either a client socket or a server data socket), not a tcp server's
             listening socket.]
         :returns: bytes object containing all bytes in the line except the CRLF
@@ -172,19 +170,7 @@ class request:
         """
         Reads the status line of the HTTP response.
 
-        :param: line_bytes: The bytes within the line
-        :returns: tuple containing the version, status code, and status message.
-        :author: Lucas Peterson
-        """
-        line = line_bytes.decode('ascii').split(' ')
-        return line[0], int(line[1]), line[2]
-
-
-    def parse_resource_line(line_bytes):
-        """
-        Reads the resource line of the HTTP response.
-
-        :param: line_bytes: The bytes within the line
+        :param line_bytes: The bytes within the line
         :returns: tuple containing the type, resource, and version.
         :author: Lucas Peterson
         """
@@ -195,7 +181,8 @@ class request:
     def parse_key_value(line_bytes):
         """
         Reads a key value line of the HTTP request.
-        :param: line_bytes: The bytes within the line
+
+        :param line_bytes: The bytes within the line
         :returns: tuple containing the key and value.
         :author: Jack Rosenbecker
         """
@@ -216,12 +203,12 @@ def get_time():
 
 class response:
     """
+    Creates a server response based on a clients request. Once the response is created
+    it can be sent to the client using the send() method.
+
     :authors: Lucas Peterson, Kade Swenson, and Jack Rosenbecker
     """
     def __init__(self, client_request : request):
-        """
-        :authors: Lucas Peterson
-        """
         self.version = '1.1'
         status_tuple = self.get_status(client_request)
         self.status_code = status_tuple[0]
