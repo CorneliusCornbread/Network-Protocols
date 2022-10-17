@@ -228,21 +228,26 @@ class response:
         self.status = status_tuple[1]
         self.headers = self.add_headers(client_request)
 
-
     def get_status(self, client_request : request) -> tuple:
         """
         :author: Kade Swenson
         """
         # TODO Gets status code and status message based onb client request object.
-        return 400, 'Bad Request'
-
+        if client_request.version != "1.1":
+            return 400, 'Bad Request'
+        if get_file_size("." + client_request.resource) is None:
+            return 404, 'Not Found'
+        return 200, 'Okay'
 
     def add_headers(self, client_request : request) -> Dict:
         """
         :author: Kade Swenson
         """
         headers = dict()
-        timestamp_in_bytes = get_time()
+        headers['Date'] = get_time()
+        headers['Connection'] = "close"
+        headers['Content-Type'] = get_mime_type("." + client_request.resource)
+        headers['Content-Length'] = get_file_size("." + client_request.resource)
         return headers
 
 
@@ -261,7 +266,7 @@ def get_mime_type(file_path):
     :param file_path: string containing path to (resource) file, such as './abc.html'
     :return: If successful in guessing the MIME type, a string representing the content type, such as 'text/html'
              Otherwise, None
-    :rtype: int or None
+    :rtype: str or None
     """
 
     mime_type_and_encoding = mimetypes.guess_type(file_path)
