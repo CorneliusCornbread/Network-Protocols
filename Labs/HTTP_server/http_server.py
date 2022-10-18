@@ -41,7 +41,7 @@ HTTP_TEMPLATE = "HTTP/{version} {response_code} {message}\r\n" \
 
 def main():
     """ Start the server """
-    http_server_setup(8083)
+    http_server_setup(8080)
 
 
 def http_server_setup(port):
