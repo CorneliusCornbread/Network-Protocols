@@ -244,7 +244,7 @@ def error_bytes(error_code : int, error_message : str) -> bytes:
     """
     pass
 
-def block_bytes(block : int, data : str) -> bytes:
+def block_bytes(mode : str, block : int, data : str) -> bytes:
     """
       2 bytes     2 bytes     n bytes
      -----------------------------------
