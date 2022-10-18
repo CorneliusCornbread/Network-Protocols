@@ -41,7 +41,7 @@ your Python code.
 - While TFTP supports both read and write requests, your TFTP server must only support read (GET) requests 
 (see extra credit below for write requests)
 
-The TFTP RFC defines 5 messages used by TFTP.
+The TFTP RFC defines 5 messages used by TFTP. (Opcodes)
 
 1. Read Request
 2. Write Request
@@ -229,5 +229,6 @@ def handle_acknowledge(opcode : int, block : str) -> bytes:
 
 def opcode(code):
     pass
+
 
 main()
