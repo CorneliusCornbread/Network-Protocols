@@ -95,7 +95,8 @@ There could be situations where the client sends an error to the server. If your
 from the client, print out the error code, print the error message, and quit.
 """
 
-
+from msilib.schema import File
+from typing import Tuple
 import socket
 import os
 import math
@@ -109,6 +110,8 @@ MAX_UDP_PACKET_SIZE = 65536
 def main():
     """
     Processes a single TFTP request
+
+    :author: Lucas Peterson
     """
 
     client_socket = socket_setup()
@@ -203,31 +206,90 @@ def socket_setup():
 # Write additional helper functions starting here  #
 ####################################################
 
-def get_requested_file(request : bytes):
-    pass
-
-def error_bytes(opcode : int, error_code : int, error_message : str) -> bytes:
+def does_file_exist(filename : str) -> bool:
     """
-     2 bytes     2 bytes      string    1 byte
-     -----------------------------------------
-    | Opcode |  ErrorCode |   ErrMsg   |   0  |
-     -----------------------------------------
+    Here in case it might be useful
+
+    :returns: boolean representing if the file can be found.
+    :author: Kade
     """
     pass
 
-def block_bytes(opcode : int, block : int, data : str) -> bytes:
+def send_bytes_to_client(socket : socket, response : bytes):
     """
-     2 bytes     2 bytes     n bytes
-     ----------------------------------
-    | Opcode |   Block #  |   Data     |
-     ----------------------------------
+    Sends the response bytes to the client. No return.
+
+    :author: Jack
     """
     pass
 
-def handle_acknowledge(opcode : int, block : str) -> bytes:
+def read_message(socket : socket) -> bytes:
+    """
+    :returns: bytes of a message sent from the client
+
+    :author: Jack
+    """
     pass
 
-def opcode(code):
+def error_bytes(error_code : int, error_message : str) -> bytes:
+    """
+      2 bytes     2 bytes      string    1 byte
+     ------------------------------------------
+    |    5    |  ErrorCode |   ErrMsg   |   0  |
+     ------------------------------------------
+
+
+    :return: bytes in the formating of an error message.
+    :author: Kade
+    """
+    pass
+
+def block_bytes(block : int, data : str) -> bytes:
+    """
+      2 bytes     2 bytes     n bytes
+     -----------------------------------
+    |    3    |   Block #  |   Data     |
+     -----------------------------------
+
+    :return: bytes in the formating of an block message.
+    :author: Kade
+    """
+    pass
+
+def parse_opcode(message : bytes) -> int:
+    """
+     2 bytes   n_bytes
+     -------------------
+    | Opcode |   ...    |
+     -------------------
+
+    :return: integer representing the opcode of a message of unknown type.
+    :author: Kade
+    """
+    pass
+
+def parse_acknowledge(acknowledge : bytes) -> int:
+    """
+      2 bytes    2 bytes
+     ----------------------
+    |    4    |   Block #  |
+     ----------------------
+
+    :return: integer representing the block # of an acknowledge message.
+    :author: Kade
+    """
+    pass
+
+def parse_read(read : bytes) -> Tuple(str, str):
+    """
+      2 bytes     string    1 byte    string    1 byte
+     -------------------------------------------------
+    |    1    |  Filename  |   0  |    Mode    |   0  |
+     -------------------------------------------------
+
+    :returns: string of filename requested in the read message and also a string of mode to send the file in.
+    :author: Kade
+    """
     pass
 
 main()
