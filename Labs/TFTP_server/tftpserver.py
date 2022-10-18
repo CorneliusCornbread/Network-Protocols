@@ -203,6 +203,30 @@ def socket_setup():
 # Write additional helper functions starting here  #
 ####################################################
 
+def get_requested_file(request : bytes):
+    pass
+
+def error_bytes(opcode : int, error_code : int, error_message : str) -> bytes:
+    """
+     2 bytes     2 bytes      string    1 byte
+     -----------------------------------------
+    | Opcode |  ErrorCode |   ErrMsg   |   0  |
+     -----------------------------------------
+    """
+    pass
+
+def block_bytes(opcode : int, block : int, data : str) -> bytes:
+    """
+     2 bytes     2 bytes     n bytes
+     ----------------------------------
+    | Opcode |   Block #  |   Data     |
+     ----------------------------------
+    """
+    pass
+
+def handle_acknowledge(opcode : int, block : str) -> bytes:
+    pass
+
 def opcode(code):
     pass
 
