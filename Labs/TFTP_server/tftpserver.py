@@ -22,6 +22,80 @@ Summary: (Summarize your experience with the lab, what you learned, what you lik
 
 """
 
+"""
+Complete the script:
+
+1. Receive a request from the client
+2. Parse the request and verify that it is a read request
+3. Send the data blocks to the client one by one waiting for an acknowledgement after each data message
+4. Don’t forget to handle error messages as well as acknowledgements for blocks that need to be 
+retransmitted.
+5. Close the socket after successfully receiving an acknowledgement for the last block
+6. Cleanly exit the program
+
+For this lab you will be writing the Python code for a TFTP server.
+
+- TFTP uses User Datagram Protocol (UDP) as the transport layer, so you will need to use a DGRAM socket in 
+your Python code.
+- Your TFTP server must send and receive data on port 69.
+- While TFTP supports both read and write requests, your TFTP server must only support read (GET) requests 
+(see extra credit below for write requests)
+
+The TFTP RFC defines 5 messages used by TFTP.
+
+1. Read Request
+2. Write Request
+3. Data Message
+4. Acknowledgement Message
+5. Error Message
+
+The first message that the server receives is a request (either a read or a write). Your server will only have 
+to support read requests. The RFC defines a request as follows:
+
+           2 bytes     string    1 byte     string   1 byte
+            ------------------------------------------------
+           | Opcode |  Filename  |   0  |    Mode    |   0  |
+            ------------------------------------------------
+
+Data blocks are sent to the client one at a time using a data message which is formatted as follows:
+
+                   2 bytes     2 bytes      n bytes
+                   ----------------------------------
+                  | Opcode |   Block #  |   Data     |
+                   ----------------------------------
+
+Once the server sends the first data block to the client, it must wait for an acknowledgement. An acknowledgement 
+is sent from the client using the following message format:
+
+                         2 bytes     2 bytes
+                         ---------------------
+                        | Opcode |   Block #  |
+                         ---------------------
+
+Here is the format for an error message:
+
+               2 bytes     2 bytes      string    1 byte
+               -----------------------------------------
+              | Opcode |  ErrorCode |   ErrMsg   |   0  |
+               -----------------------------------------
+
+The TFTP RFC defines a set of error codes and what they mean:
+
+   Value     Meaning
+   0         Not defined, see error message (if any).
+   1         File not found.
+   2         Access violation.
+   3         Disk full or allocation exceeded.
+   4         Illegal TFTP operation.
+   5         Unknown transfer ID.
+   6         File already exists.
+   7         No such user.
+
+There could be situations where the client sends an error to the server. If your script receives an error message 
+from the client, print out the error code, print the error message, and quit.
+"""
+
+
 import socket
 import os
 import math
@@ -128,7 +202,8 @@ def socket_setup():
 ####################################################
 # Write additional helper functions starting here  #
 ####################################################
-def opcode(code):
 
+def opcode(code):
+    pass
 
 main()
