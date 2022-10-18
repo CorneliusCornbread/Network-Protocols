@@ -128,6 +128,7 @@ def socket_setup():
 ####################################################
 # Write additional helper functions starting here  #
 ####################################################
+def opcode(code):
 
 
 main()
