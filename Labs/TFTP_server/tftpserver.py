@@ -95,6 +95,7 @@ There could be situations where the client sends an error to the server. If your
 from the client, print out the error code, print the error message, and quit.
 """
 
+from email.headerregistry import Address
 from msilib.schema import File
 from typing import Tuple
 import socket
@@ -124,9 +125,23 @@ def main():
     #   functions as needed                            #
     ####################################################
 
+    queue = list()
 
+    request = read_message(client_socket)
+    print(f"Server has recevied request with opcode {parse_opcode(request)}")
 
+    queue.append(read_message(client_socket))
+    print(f"Request added to the queue at position [{(len(queue) - 1)}]")
 
+    while len(queue) > 0:
+        request = queue.pop(0)
+        opcode = parse_opcode(request)
+
+        if opcode == 1: # Read Request #
+            handle_read(client_socket, request, queue)
+        elif opcode == 2: # Write Request #
+            handle_write(client_socket, request, queue)
+    
     ####################################################
     # Your code ends here                              #
     ####################################################
@@ -206,6 +221,84 @@ def socket_setup():
 # Write additional helper functions starting here  #
 ####################################################
 
+def safe_read(socket : socket, queue : list) -> bytes:
+    """
+    Returns only an Acknowledgement Message's block number. Any Read or Write Requests are added to the queue.
+
+    :returns: sends bytes of Acknowledgement Message or Error
+    :author: Lucas Peterson
+    """
+    message = read_message(socket)
+    opcode = parse_opcode(message)
+
+    while opcode != 4:
+        print(f"Server has recevied request with opcode {opcode}")
+
+        queue.append(message)
+        print(f"Request added to the queue at position [{(len(queue) - 1)}]")
+
+        message = read_message(socket)
+        opcode = parse_opcode(message)
+    
+    return message
+
+
+def handle_read(socket : socket, request : bytes, queue : list):
+    """
+    Handles a read connection
+
+    :author: Lucas Peterson
+    """
+    read = parse_read(request)
+    filename = read[0]
+    mode = read[1]
+
+    if does_file_exist(filename):
+        blocks = get_file_block_count(filename)
+        n = 0
+        
+        error = None
+        while n < blocks and error == None:
+            n += 1
+
+            block = block_bytes(mode, n, get_file_block(filename, n).decode('ascii'))
+            send_bytes_to_client(socket, block)
+
+            message = safe_read(socket, queue)
+            error = parse_opcode(message) != 4
+            if error == None:
+                acknowledge = parse_acknowledge(message)
+
+            while acknowledge != n and error == None:
+                if acknowledge == n - 1:
+                    send_bytes_to_client(socket, block)
+
+                message = safe_read(socket, queue)
+                error = parse_opcode(message) != 4
+                if error == None:
+                    acknowledge = parse_acknowledge(message)
+
+        if error != None:
+            error_parsed = parse_error(error)
+
+            error_code = error_parsed[0]
+            error_message = error_parsed[1]
+            print(f"ERROR : [{error_code}] {error_message}")
+    else:
+        send_bytes_to_client(socket, error_bytes(1, "File not found"))
+    
+    pass
+
+
+def handle_write(socket : socket, request : bytes, queue : list):
+    """
+    Handles a write connection
+
+    :author: Lucas Peterson
+    """
+    pass
+
+
 def does_file_exist(filename : str) -> bool:
     """
     Here in case it might be useful
@@ -215,7 +308,8 @@ def does_file_exist(filename : str) -> bool:
     """
     pass
 
-def send_bytes_to_client(socket : socket, response : bytes):
+
+def send_bytes_to_client(socket : socket, address : Tuple(str, int), response : bytes):
     """
     Sends the response bytes to the client. No return.
 
@@ -223,13 +317,16 @@ def send_bytes_to_client(socket : socket, response : bytes):
     """
     pass
 
-def read_message(socket : socket) -> bytes:
+
+def read_message(socket : socket) -> Tuple(bytes, Tuple(str, int)):
     """
     :returns: bytes of a message sent from the client
 
+    :return: tuple containing bytes object of data receved and anouther tuple containing the address information (ip, port)
     :author: Jack
     """
     pass
+
 
 def error_bytes(error_code : int, error_message : str) -> bytes:
     """
@@ -244,6 +341,7 @@ def error_bytes(error_code : int, error_message : str) -> bytes:
     """
     pass
 
+
 def block_bytes(mode : str, block : int, data : str) -> bytes:
     """
       2 bytes     2 bytes     n bytes
@@ -255,6 +353,7 @@ def block_bytes(mode : str, block : int, data : str) -> bytes:
     :author: Kade
     """
     pass
+
 
 def parse_opcode(message : bytes) -> int:
     """
@@ -268,6 +367,7 @@ def parse_opcode(message : bytes) -> int:
     """
     pass
 
+
 def parse_acknowledge(acknowledge : bytes) -> int:
     """
       2 bytes    2 bytes
@@ -280,6 +380,7 @@ def parse_acknowledge(acknowledge : bytes) -> int:
     """
     pass
 
+
 def parse_read(read : bytes) -> Tuple(str, str):
     """
       2 bytes     string    1 byte    string    1 byte
@@ -289,6 +390,19 @@ def parse_read(read : bytes) -> Tuple(str, str):
 
     :returns: string of filename requested in the read message and also a string of mode to send the file in.
     :author: Kade
+    """
+    pass
+
+
+def parse_error(error : bytes) -> Tuple(int, str):
+    """
+      2 bytes     2 bytes      string    1 byte
+     ------------------------------------------
+    |    5    |  ErrorCode |   ErrMsg   |   0  |
+     ------------------------------------------
+
+    :returns: int representing error code and also a string of the error message.
+    :author: Lucas Petersn
     """
     pass
 
