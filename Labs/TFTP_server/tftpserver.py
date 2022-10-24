@@ -213,7 +213,8 @@ def does_file_exist(filename : str) -> bool:
     :returns: boolean representing if the file can be found.
     :author: Kade
     """
-    pass
+
+    return get_file_block_count(filename) != -1
 
 def send_bytes_to_client(socket : socket, response : bytes):
     """
@@ -242,9 +243,10 @@ def error_bytes(error_code : int, error_message : str) -> bytes:
     :return: bytes in the formating of an error message.
     :author: Kade
     """
-    pass
+    return b'\x00\x05' + error_code.to_bytes(2, "big") + error_message.encode("ASCII") + b'\x00'
 
-def block_bytes(mode : str, block : int, data : str) -> bytes:
+
+def block_bytes(block : int, data : str) -> bytes:
     """
       2 bytes     2 bytes     n bytes
      -----------------------------------
@@ -254,7 +256,8 @@ def block_bytes(mode : str, block : int, data : str) -> bytes:
     :return: bytes in the formating of an block message.
     :author: Kade
     """
-    pass
+    return b'\x00\x03' + int.to_bytes(block, 2, "big") + data.encode("ASCII")
+
 
 def parse_opcode(message : bytes) -> int:
     """
@@ -266,7 +269,7 @@ def parse_opcode(message : bytes) -> int:
     :return: integer representing the opcode of a message of unknown type.
     :author: Kade
     """
-    pass
+    return int.from_bytes(message[0:2], "big")
 
 def parse_acknowledge(acknowledge : bytes) -> int:
     """
@@ -278,9 +281,10 @@ def parse_acknowledge(acknowledge : bytes) -> int:
     :return: integer representing the block # of an acknowledge message.
     :author: Kade
     """
-    pass
+    return acknowledge[2:4]
 
-def parse_read(read : bytes) -> Tuple(str, str):
+
+def parse_read(read : bytes) -> Tuple[str, str]:
     """
       2 bytes     string    1 byte    string    1 byte
      -------------------------------------------------
@@ -290,7 +294,24 @@ def parse_read(read : bytes) -> Tuple(str, str):
     :returns: string of filename requested in the read message and also a string of mode to send the file in.
     :author: Kade
     """
-    pass
+    index = 2
+    byte = read[index]
+    filename = b''
+    mode = b''
+    while byte != b'\x00':
+        filename += byte
+        index += 1
+        byte = read[index]
+
+    #This indexing is to skip the 1 byte indicator
+    index += 1
+
+    while byte != b'\x00':
+        mode += byte
+        index += 1
+        byte = read[index]
+
+    return filename.decode("ASCII"), mode.decode("ASCII")
 
 
 main()
