@@ -1,6 +1,6 @@
 """
 - NOTE: REPLACE 'N' Below with your section, year, and lab number
-- CS2911 - 0NN
+- CS2911 - 011
 - Fall 2022
 - Lab 4
 - Names:
@@ -11,16 +11,15 @@
 An HTTP server
 
 Introduction: (Describe the lab in your own words)
-
-
-
+Create an HTTP 1.1 server that serves a page with a png and css styling resource. Make sure it correctly handles root resource requests and invalid
+resource requests.
 
 Summary: (Summarize your experience with the lab, what you learned, what you liked,what you disliked, and any suggestions you have for improvement)
+Python makes this lab really funky. Throughout the project I was having issues with the absolute path of the script being incorrect due to the
+absolute path function returning the root project folder instead of the script's folder. As opposed to simply running the script via the terminal
+which would return the script folder. Python was never really meant to do this kind of resource hosting, but we made it work. 
 
-
-
-
-
+Though once it worked it was really cool, seeing my web browser of choice perfectly display the HTML it had been served.
 """
 
 from email import message
@@ -38,6 +37,21 @@ HTTP_TEMPLATE = "HTTP/{version} {response_code} {message}\r\n" \
                 "Connection: {connection}\r\n" \
                 "Content-Type: {content_type}\r\n\r\n"
 
+HTTP404_TEMPLATE = "HTTP/{version} {response_code} {message}\r\n" \
+                   "Date: {date}\r\n" \
+                   "Connection: {connection}\r\n\r\n"
+
+HTTP404_ERROR_HTML = """<!DOCTYPE html>
+<html>
+<head>
+   <title>404 Not Found</title>
+</head>
+<body>
+   <h1>Not Found</h1>
+   <p>The requested URL was not found on this server.</p>
+</body>
+</html>
+"""
 
 def main():
     """ Start the server """
@@ -91,12 +105,11 @@ def handle_request(request_socket):
         req = request(request_socket)
         res = response(req)
         res.send(request_socket, req.resource)
+        request_socket.close()
     except:
         print("HTTP server exiting . . .")
         print('threads: ', threading.enumerate())
-
-    request_socket.close()
-    
+        request_socket.close()    
 
 
 # Utility functions
@@ -157,6 +170,11 @@ class request:
 
         self.type = request[0]
         self.resource = request[1].removeprefix('/')
+
+        # If no particular resource is served
+        if self.resource == '':
+            self.resource = 'index.html'
+
         self.version = request[2].split('/')[1]
 
     def read_line(self, request_socket):
@@ -242,10 +260,11 @@ class response:
         :author: Kade Swenson
         """
         headers = dict()
+        length = get_file_size(client_request.resource)
         headers['Date'] = get_time()
         headers['Connection'] = "close"
         headers['Content-Type'] = get_mime_type(client_request.resource)
-        headers['Content-Length'] = get_file_size(client_request.resource)
+        headers['Content-Length'] =  length if length != None else 0
         return headers
 
     def send(self, server_socket: socket, resource: str):
@@ -263,11 +282,19 @@ class response:
 
         print(f"Serving resource \'{resource}\'")
 
+        file_bytes = bytes()
+
+        if (self.status_code == 404):
+            file_bytes = HTTP404_ERROR_HTML.encode('ascii')
+            headers['Content-Length'] = len(file_bytes)
+        else:
+            file_bytes = get_file_bytes(resource)
+
         header_str = HTTP_TEMPLATE.format(
             version=self.version,
             response_code=self.status_code,
             message=self.status,
-            date=headers['Date'],
+            date=headers['Date'].decode('ascii'),
             length=headers['Content-Length'],
             connection=headers['Connection'],
             content_type=headers['Content-Type']
@@ -275,11 +302,8 @@ class response:
 
         header_bin = header_str.encode('ascii')
         server_socket.send(header_bin)
-        file_bytes = bytes()
 
-        if self.status_code == 200:
-            file_bytes = get_file_bytes(resource)
-        else:
+        if self.status_code == 404:
             print(f"Requested resource: \'{resource}\', not found at expected location: {os.path.abspath(resource)}")
 
         server_socket.send(file_bytes)  # Resource data
