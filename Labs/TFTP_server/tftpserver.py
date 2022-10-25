@@ -95,6 +95,7 @@ There could be situations where the client sends an error to the server. If your
 from the client, print out the error code, print the error message, and quit.
 """
 
+from audioop import add
 from email.headerregistry import Address
 from msilib.schema import File
 from tkinter import E
@@ -102,6 +103,9 @@ from typing import Tuple
 import socket
 import os
 import math
+
+import pathlib
+FILE_FOLDER = pathlib.Path(__file__).parent.resolve()
 
 # Helpful constants used by TFTP
 TFTP_PORT = 69
@@ -136,7 +140,7 @@ def main():
 
     while len(queue) > 0:
         request = queue.pop(0)
-        opcode = parse_opcode(request)
+        opcode = parse_opcode(request[0])
 
         if opcode == 1: # Read Request #
             handle_read(client_socket, request, queue)
@@ -159,7 +163,7 @@ def get_file_block_count(filename):
     try:
         # Use the OS call to get the file size
         #   This function throws an exception if the file doesn't exist
-        file_size = os.stat(filename).st_size
+        file_size = os.stat(f"{FILE_FOLDER}\\{filename}").st_size
         return math.ceil(file_size / TFTP_BLOCK_SIZE)
     except:
         return -1
@@ -173,7 +177,9 @@ def get_file_block(filename, block_number):
     :return: The data contents (as a bytes object) of the file block
     """
     # Open the file for reading
-    file = open(filename, 'rb')
+    file_path = f"{FILE_FOLDER}\\{filename}"
+
+    file = open(file_path, 'rb')
     block_byte_offset = (block_number-1) * TFTP_BLOCK_SIZE
     file.seek(block_byte_offset)
 
@@ -191,15 +197,17 @@ def put_file_block(filename, block_data, block_number):
     :param block_number: The block number (1 based)
     :return: Nothing
     """
+    file_path = f"{FILE_FOLDER}\\{filename}"
+
     # Try to create the file if it doesn't exist
     try:
-        with open(filename, 'x') as f:
+        with open(file_path, 'x') as f:
             pass
     except FileExistsError:
         pass
 
     # Open the file for updating
-    file = open(filename, 'r+b')
+    file = open(file_path, 'r+b')
     block_byte_offset = (block_number-1) * TFTP_BLOCK_SIZE
     file.seek(block_byte_offset)
 
@@ -222,7 +230,7 @@ def socket_setup():
 # Write additional helper functions starting here  #
 ####################################################
 
-def safe_read(socket : socket, address : Tuple(str, int), queue : list) -> bytes:
+def safe_read(socket: socket, address: tuple[str, int], queue : list) -> bytes:
     """
     Returns only an Acknowledgement Message's block number. Any Read or Write Requests are added to the queue.
 
@@ -235,8 +243,11 @@ def safe_read(socket : socket, address : Tuple(str, int), queue : list) -> bytes
     while opcode != 4 or (message_address[0] != address[0] and message_address[1] != address[1]):
         print(f"Server has recevied request from {message_address[0]} with opcode {opcode}")
 
-        queue.append((message_data, message_address))
-        print(f"Request added to the queue at position [{(len(queue) - 1)}]")
+        if address == message_address:
+            print("Skipping request, as it is a duplicate from the current client")
+        else:
+            queue.append((message_data, message_address))
+            print(f"Request added to the queue at position [{(len(queue) - 1)}]")
 
         message_data, message_address = read_message(socket)
         opcode = parse_opcode(message_data)
@@ -244,7 +255,7 @@ def safe_read(socket : socket, address : Tuple(str, int), queue : list) -> bytes
     return message_data
 
 
-def handle_read(socket : socket, request : Tuple(bytes, Tuple(str, int)), queue : list):
+def handle_read(socket: socket, request: tuple[bytes, tuple[str, int]], queue : list):
     """
     Handles a read connection
 
@@ -263,16 +274,18 @@ def handle_read(socket : socket, request : Tuple(bytes, Tuple(str, int)), queue 
         while n < blocks and error == None:
             n += 1
 
-            block = block_bytes(mode, n, get_file_block(filename, n).decode('ascii'))
+            block = block_bytes(n, get_file_block(filename, n))
 
             send_bytes_to_client(socket, address, block)
-            acknowledge, error = read_acknowledge(socket, queue)
+            acknowledge, error = read_acknowledge(socket, address, queue)
 
-            while acknowledge != n and error == None:
-                if acknowledge == n - 1:
+            ack_int = int.from_bytes(acknowledge, 'big')
+
+            while ack_int != n and error == None:
+                if ack_int == n - 1:
                     send_bytes_to_client(socket, address, block)
-
-                acknowledge, error = read_acknowledge(socket, queue)
+                acknowledge, error = read_acknowledge(socket, address, queue)
+                ack_int = int.from_bytes(acknowledge, 'big')
 
         if error != None:
             error_parsed = parse_error(error)
@@ -281,11 +294,11 @@ def handle_read(socket : socket, request : Tuple(bytes, Tuple(str, int)), queue 
             error_message = error_parsed[1]
             print(f"ERROR : [{error_code}] {error_message}")
     else:
-        send_bytes_to_client(socket, error_bytes(1, "File not found"))
+        send_bytes_to_client(socket, address, error_bytes(1, "File not found"))
 
 
-def read_acknowledge(socket : socket, queue : list) -> Tuple(int, bytes):
-    message = safe_read(socket, queue)
+def read_acknowledge(socket: socket, address: tuple[str, int], queue: list) -> tuple[int, bytes]:
+    message = safe_read(socket, address, queue)
 
     error = None
     acknowledge = -1
@@ -308,26 +321,29 @@ def does_file_exist(filename : str) -> bool:
     return get_file_block_count(filename) != -1
 
 
-def send_bytes_to_client(socket : socket, address : Tuple(str, int), response : bytes):
+def send_bytes_to_client(socket: socket, address: tuple[str, int], response: bytes):
     """
     Sends the response bytes to the client. No return.
 
     :author: Jack
     """
-    pass
+    socket.sendto(response, address)
 
 
-def read_message(socket : socket) -> Tuple(bytes, Tuple(str, int)):
+def read_message(socket: socket) -> tuple[bytes, tuple[str, int]]:
     """
     :returns: bytes of a message sent from the client
 
     :return: tuple containing bytes object of data receved and anouther tuple containing the address information (ip, port)
     :author: Jack
     """
-    pass
+    data, address = socket.recvfrom(1500) # for some reason I can't read in bytes bit by bit, I have to read them in one big chunk
+
+    return (data, address)
 
 
-def error_bytes(error_code : int, error_message : str) -> bytes:
+
+def error_bytes(error_code: int, error_message: str) -> bytes:
     """
       2 bytes     2 bytes      string    1 byte
      ------------------------------------------
@@ -341,7 +357,7 @@ def error_bytes(error_code : int, error_message : str) -> bytes:
     return b'\x00\x05' + error_code.to_bytes(2, "big") + error_message.encode("ASCII") + b'\x00'
 
 
-def block_bytes(block : int, data : str) -> bytes:
+def block_bytes(block: int, data: bytes) -> bytes:
 
     """
       2 bytes     2 bytes     n bytes
@@ -352,11 +368,11 @@ def block_bytes(block : int, data : str) -> bytes:
     :return: bytes in the formating of an block message.
     :author: Kade
     """
-    return b'\x00\x03' + int.to_bytes(block, 2, "big") + data.encode("ASCII")
+    return b'\x00\x03' + int.to_bytes(block, 2, "big") + data
 
 
 
-def parse_opcode(message : bytes) -> int:
+def parse_opcode(message: bytes) -> int:
     """
      2 bytes   n_bytes
      -------------------
@@ -369,7 +385,7 @@ def parse_opcode(message : bytes) -> int:
     return int.from_bytes(message[0:2], "big")
 
 
-def parse_acknowledge(acknowledge : bytes) -> int:
+def parse_acknowledge(acknowledge: bytes) -> int:
     """
       2 bytes    2 bytes
      ----------------------
@@ -383,7 +399,7 @@ def parse_acknowledge(acknowledge : bytes) -> int:
 
 
 
-def parse_read(read : bytes) -> Tuple(str, str):
+def parse_read(read: bytes) -> tuple[str, str]:
     """
       2 bytes     string    1 byte    string    1 byte
      -------------------------------------------------
@@ -397,23 +413,23 @@ def parse_read(read : bytes) -> Tuple(str, str):
     byte = read[index]
     filename = b''
     mode = b''
-    while byte != b'\x00':
-        filename += byte
+    while byte != 0:
+        filename += int.to_bytes(byte, length=1)
         index += 1
         byte = read[index]
 
     #This indexing is to skip the 1 byte indicator
     index += 1
 
-    while byte != b'\x00':
-        mode += byte
+    while byte != 0:
+        mode += int.to_bytes(byte, length=1)
         index += 1
         byte = read[index]
 
     return filename.decode("ASCII"), mode.decode("ASCII")
 
 
-def parse_error(error : bytes) -> Tuple(int, str):
+def parse_error(error: bytes) -> tuple[int, str]:
     """
       2 bytes     2 bytes      string    1 byte
      ------------------------------------------
