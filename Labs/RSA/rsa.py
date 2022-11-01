@@ -4,8 +4,9 @@
 - Fall 202N
 - Lab N
 - Names:
-  -
-  -
+  - Jack - Worked on simple functions
+  - Lucas - Worked on complex math functions
+  - Kade - Worked on questions and checksum
 
 16-bit RSA
 
@@ -312,7 +313,7 @@ def create_keys():
     Create the public and private keys.
 
     :return: the keys as a three-tuple: (e,d,n)
-    :author: Jack
+    :author: Lucas
     """
 
     pass  # Delete this line and complete this method
@@ -329,7 +330,7 @@ def apply_key(key, m):
     :return: the message with the key applied. For example,
              if given the public key and a message, encrypts the message
              and returns the ciphertext.
-    :author: Kade
+    :author: Jack
     """
     pass  # Delete this line and complete this method
 
@@ -357,8 +358,9 @@ def find_prime(max: int) -> int:
 
     :param max: an int that is the max value that we can test up to for finding a prime
     :return: a prime int
-    :author: Lucas
+    :author: Jack
     """
     pass
+
 
 main()
