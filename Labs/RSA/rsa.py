@@ -312,6 +312,7 @@ def create_keys():
     Create the public and private keys.
 
     :return: the keys as a three-tuple: (e,d,n)
+    :author: Jack
     """
 
     pass  # Delete this line and complete this method
@@ -328,8 +329,8 @@ def apply_key(key, m):
     :return: the message with the key applied. For example,
              if given the public key and a message, encrypts the message
              and returns the ciphertext.
+    :author: Kade
     """
-
     pass  # Delete this line and complete this method
 
 
@@ -349,5 +350,15 @@ def break_key(pub):
 
 # Add additional functions here, if needed.
 
+
+def find_prime(max: int) -> int:
+    """
+    Finds a prime with the max being the max value to test for.
+
+    :param max: an int that is the max value that we can test up to for finding a prime
+    :return: a prime int
+    :author: Lucas
+    """
+    pass
 
 main()
