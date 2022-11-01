@@ -315,7 +315,7 @@ def create_keys():
     :return: the keys as a three-tuple: (e,d,n)
     :author: Lucas
     """
-
+    find_prime()
     pass  # Delete this line and complete this method
 
 
@@ -352,7 +352,7 @@ def break_key(pub):
 # Add additional functions here, if needed.
 
 
-def find_prime(max: int) -> int:
+def find_prime(max: int, min: int) -> int:
     """
     Finds a prime with the max being the max value to test for.
 
