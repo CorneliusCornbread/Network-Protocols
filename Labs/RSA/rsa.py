@@ -44,13 +44,11 @@ Summary: (Summarize your experience with the lab, what you learned, what you lik
 
 """
 
-import random
-import math
-
 # Use these named constants as you write your code
 # To increase the key size add more 1's and 0's to these values
 #   E.g. MAX_PRIME = 0b1111111111111111 <- 16 bits
 #        MIN_PRIME = 0b1100000000000001 <- 16 bits
+
 
 MAX_PRIME = 0b11111111  # The maximum value a prime number can have
 MIN_PRIME = 0b11000001  # The minimum value a prime number can have 
@@ -315,8 +313,16 @@ def create_keys():
     :return: the keys as a three-tuple: (e,d,n)
     :author: Lucas
     """
-    find_prime()
-    pass  # Delete this line and complete this method
+
+    p, q = (find_prime(MAX_PRIME, MIN_PRIME), find_prime(MAX_PRIME, MIN_PRIME))
+    e = PUBLIC_EXPONENT
+
+    n = p * q
+    z = (p - 1) * (q - 1)
+
+    d = 1 / (e % z)
+
+    return e, d, n
 
 
 def apply_key(key, m):
@@ -338,15 +344,40 @@ def apply_key(key, m):
 def break_key(pub):
     """
     Break a key.  Given the public key, find the private key.
-    Factorizes the modulus n to find the prime numbers p and q.
+    Factorizes the modulus n to find the prime numbers p and q
+    using Euclid’s Extended Algorithm.
 
-    You can follow the steps in the "optional" part of the in-class
-    exercise.
+    puedo-code:
+
+    function inverse(a, n)
+    t := 0
+    r := n
+    newt := 1    
+    newr := a    
+    while newr ≠ 0
+        quotient := r div newr
+        (t, newt) := (newt, t - quotient * newt) 
+        (r, newr) := (newr, r - quotient * newr)
+    if r > 1 then return "a is not invertible"
+    if t < 0 then t := t + n
+    return t
 
     :param pub: a tuple containing the public key (e,n)
     :return: a tuple containing the private key (d,n)
     """
-    pass  # Delete this line and complete this method
+    e, n = pub
+
+    t = 0
+    r = n
+
+    new_t = 1
+    new_r = e
+    while new_r != 0:
+        quotient = int(r / new_r)
+        t, new_t = (new_t, t - quotient * new_t)
+        t, new_t = (new_r, r - quotient * new_r)
+    
+    return (e, t + n)
 
 
 # Add additional functions here, if needed.
