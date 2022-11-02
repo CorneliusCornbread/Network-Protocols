@@ -383,6 +383,18 @@ def break_key(pub):
 # Add additional functions here, if needed.
 
 
+def next_prime(min: int, n : int):
+    """
+    Finds the next prime within the min value.
+
+    :param min: an int that is the min value we test for to find the next prime
+    :param n: asks for the nth prime in the sequence of primes from the min
+    :return: a prime int
+    :author: Jack
+    """
+    pass
+
+
 def find_prime(max: int, min: int) -> int:
     """
     Finds a prime with the max being the max value to test for.
@@ -392,6 +404,31 @@ def find_prime(max: int, min: int) -> int:
     :author: Jack
     """
     pass
+
+
+def factorize(a, n):
+    """
+    Factorizes the expression (a * t) mod n == 1 to find t.
+
+    :return: t or -1 if a is not invertible
+    :author: Lucas
+    """
+    t = 0
+    r = n
+
+    new_t = 1
+    new_r = a
+    while new_r != 0:
+        quotient = int(r / new_r)
+        t, new_t = (new_t, t - quotient * new_t)
+        r, new_r = (new_r, r - quotient * new_r)
+
+    if r > 1:
+        return -1
+    if t < 0:
+        t += n
+
+    return t
 
 
 main()
