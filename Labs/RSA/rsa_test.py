@@ -76,8 +76,21 @@ def break_key(pub):
 
 
 def prime(n : int) -> bool:
-    primes = [193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251]
-    return n in primes
+    """
+    Determines if n is prime
+
+    :param n: a number to test if prime
+    :return: boolean representing if n is prime
+    :author: Lucas
+    """
+    if n > 1:
+        for i in range(2, int(n / 2) + 1):
+            if (n % i) == 0:
+                return False
+    else:
+        return False
+
+    return True
 
 
 def next_prime(min: int, n : int):

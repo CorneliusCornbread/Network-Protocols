@@ -373,6 +373,24 @@ def break_key(pub):
 # Add additional functions here, if needed.
 
 
+def prime(n : int) -> bool:
+    """
+    Determines if n is prime
+
+    :param n: a number to test if prime
+    :return: boolean representing if n is prime
+    :author: Lucas
+    """
+    if n > 1:
+        for i in range(2, int(n / 2) + 1):
+            if (n % i) == 0:
+                return False
+    else:
+        return False
+
+    return True
+
+
 def next_prime(min: int, n : int):
     """
     Finds the next prime within the min value.
