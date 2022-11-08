@@ -314,13 +314,17 @@ def create_keys():
     :author: Lucas
     """
 
-    p, q = (find_prime(MAX_PRIME, MIN_PRIME), find_prime(MAX_PRIME, MIN_PRIME))
+    p = find_prime(MAX_PRIME, MIN_PRIME)
+    q = find_prime(MAX_PRIME, MIN_PRIME)
+    while p == q:
+        q = find_prime(MAX_PRIME, MIN_PRIME)
+
     e = PUBLIC_EXPONENT
 
     n = p * q
     z = (p - 1) * (q - 1)
 
-    d = 1 / (e % z)
+    d = factorize(e, z)
 
     return e, d, n
 
@@ -344,43 +348,47 @@ def apply_key(key, m):
 def break_key(pub):
     """
     Break a key.  Given the public key, find the private key.
-    Factorizes the modulus n to find the prime numbers p and q
-    using Euclid’s Extended Algorithm.
-
-    puedo-code:
-
-    function inverse(a, n)
-    t := 0
-    r := n
-    newt := 1    
-    newr := a    
-    while newr ≠ 0
-        quotient := r div newr
-        (t, newt) := (newt, t - quotient * newt) 
-        (r, newr) := (newr, r - quotient * newr)
-    if r > 1 then return "a is not invertible"
-    if t < 0 then t := t + n
-    return t
+    Factorizes the modulus n to find the prime numbers p and q.
 
     :param pub: a tuple containing the public key (e,n)
     :return: a tuple containing the private key (d,n)
     """
     e, n = pub
 
-    t = 0
-    r = n
+    i = 0
+    p = next_prime(MIN_PRIME, i)
+    q = int(n / p)
+    while not prime(q) or (q - 1) % e == 0:
+        i += 1
+        p = next_prime(MIN_PRIME, i)
+        q = int(n / p)
+        
 
-    new_t = 1
-    new_r = e
-    while new_r != 0:
-        quotient = int(r / new_r)
-        t, new_t = (new_t, t - quotient * new_t)
-        t, new_t = (new_r, r - quotient * new_r)
-    
-    return (e, t + n)
+    z = (p - 1) * (q - 1)
+    d = factorize(e, z)
+
+    return d, n
 
 
 # Add additional functions here, if needed.
+
+
+def prime(n : int) -> bool:
+    """
+    Determines if n is prime
+
+    :param n: a number to test if prime
+    :return: boolean representing if n is prime
+    :author: Lucas
+    """
+    if n > 1:
+        for i in range(2, int(n / 2) + 1):
+            if (n % i) == 0:
+                return False
+    else:
+        return False
+
+    return True
 
 
 def next_prime(min: int, n : int):

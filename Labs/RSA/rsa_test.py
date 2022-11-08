@@ -5,6 +5,7 @@
 
 
 import math
+import random
 
 
 MAX_PRIME = 0b11111111  # The maximum value a prime number can have
@@ -14,12 +15,6 @@ PUBLIC_EXPONENT = 17  # The default public exponent
 def main():
     e, d, n = create_keys()
     pub = (e, n)
-    pri = (d, n)
-
-    if e == PUBLIC_EXPONENT and n == 37249:
-        print("Test Passed [create_keys()]")
-    else:
-        print("Test Failed [create_keys()]")
 
     brk_d, brk_n = break_key(pub)
     if brk_d == d and brk_n == n:
@@ -36,16 +31,17 @@ def create_keys():
     :author: Lucas
     """
 
-    p, q = (find_prime(MAX_PRIME, MIN_PRIME), find_prime(MAX_PRIME, MIN_PRIME))
+    p = find_prime(MAX_PRIME, MIN_PRIME)
+    q = find_prime(MAX_PRIME, MIN_PRIME)
+    while p == q:
+        q = find_prime(MAX_PRIME, MIN_PRIME)
+
     e = PUBLIC_EXPONENT
 
-    n = p * q # 37249
-    z = (p - 1) * (q - 1) # 36864
+    n = p * q
+    z = (p - 1) * (q - 1)
 
     d = factorize(e, z)
-
-    print(f"d : {d}")
-    print(f"(d * e) % z : {(d * e) % z}")
 
     return e, d, n
 
@@ -60,11 +56,41 @@ def break_key(pub):
     """
     e, n = pub
 
-    d = None
+    i = 0
+    p = next_prime(MIN_PRIME, i)
+    q = int(n / p)
+    print(f"Trying [p : {p}] and [q : {q}]")
+    while not prime(q) or (q - 1) % e == 0:
+        i += 1
+        p = next_prime(MIN_PRIME, i)
+        q = int(n / p)
+        print(f"Trying [p : {p}] and [q : {q}]")
+        
+
+    z = (p - 1) * (q - 1)
+    d = factorize(e, z)
 
     return d, n
 
 # Add additional functions here, if needed.
+
+
+def prime(n : int) -> bool:
+    """
+    Determines if n is prime
+
+    :param n: a number to test if prime
+    :return: boolean representing if n is prime
+    :author: Lucas
+    """
+    if n > 1:
+        for i in range(2, int(n / 2) + 1):
+            if (n % i) == 0:
+                return False
+    else:
+        return False
+
+    return True
 
 
 def next_prime(min: int, n : int):
@@ -76,7 +102,11 @@ def next_prime(min: int, n : int):
     :return: a prime int
     :author: Jack
     """
-    pass
+    primes = [193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251]
+    if n == -1:
+        return primes[random.randrange(0, len(primes))]
+    else:
+        return primes[n]
 
 
 def find_prime(max: int, min: int) -> int:
@@ -87,7 +117,7 @@ def find_prime(max: int, min: int) -> int:
     :return: a prime int
     :author: Jack
     """
-    return 193
+    return next_prime(min, -1)
 
 
 def factorize(a, n):
