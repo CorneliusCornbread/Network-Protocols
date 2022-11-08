@@ -55,18 +55,17 @@ Summary: (Summarize your experience with the lab, what you learned, what you lik
 
 """
 
-import random
-import math
-
 # Use these named constants as you write your code
 # To increase the key size add more 1's and 0's to these values
 #   E.g. MAX_PRIME = 0b1111111111111111 <- 16 bits
 #        MIN_PRIME = 0b1100000000000001 <- 16 bits
 
+
 MAX_PRIME = 0b11111111  # The maximum value a prime number can have
 MIN_PRIME = 0b11000001  # The minimum value a prime number can have 
 PUBLIC_EXPONENT = 17  # The default public exponent
 
+import random
 
 # ---------------------------------------
 # Do not modify code below this line
@@ -327,10 +326,22 @@ def create_keys():
     :author: Lucas
     """
 
-    pass  # Delete this line and complete this method
+    p = find_prime(MAX_PRIME, MIN_PRIME)
+    q = find_prime(MAX_PRIME, MIN_PRIME)
+    while p == q:
+        q = find_prime(MAX_PRIME, MIN_PRIME)
+
+    e = PUBLIC_EXPONENT
+
+    n = p * q
+    z = (p - 1) * (q - 1)
+
+    d = factorize(e, z)
+
+    return e, d, n
 
 
-def apply_key(key, m):
+def apply_key(key: tuple[int, int], m: int) -> int:
     """
     Apply the key, given as a tuple (e,n) or (d,n) to the message.
 
@@ -343,7 +354,10 @@ def apply_key(key, m):
              and returns the ciphertext.
     :author: Jack
     """
-    pass  # Delete this line and complete this method
+    n = key[1]
+    ed = key[0]
+
+    return m**ed % n
 
 
 def break_key(pub):
@@ -351,27 +365,133 @@ def break_key(pub):
     Break a key.  Given the public key, find the private key.
     Factorizes the modulus n to find the prime numbers p and q.
 
-    You can follow the steps in the "optional" part of the in-class
-    exercise.
-
     :param pub: a tuple containing the public key (e,n)
     :return: a tuple containing the private key (d,n)
     """
-    pass  # Delete this line and complete this method
+    e, n = pub
+
+    i = 0
+    p = next_prime(MIN_PRIME, i)
+    q = int(n / p)
+    while not prime(q) or (q - 1) % e == 0:
+        i += 1
+        p = next_prime(MIN_PRIME, i)
+        q = int(n / p)
+        
+
+    z = (p - 1) * (q - 1)
+    d = factorize(e, z)
+
+    return d, n
 
 
 # Add additional functions here, if needed.
 
 
-def find_prime(max: int) -> int:
+def prime(n: int) -> bool:
     """
-    Finds a prime with the max being the max value to test for.
+    Determines if n is prime
 
-    :param max: an int that is the max value that we can test up to for finding a prime
+    :param n: a number to test if prime
+    :return: boolean representing if n is prime
+    :author: Lucas
+    """
+    if n > 1:
+        for i in range(2, int(n / 2) + 1):
+            if (n % i) == 0:
+                return False
+    else:
+        return False
+
+    return True
+
+
+def next_prime(min: int, n: int) -> int:
+    """
+    Finds the next prime within the min value.
+
+    :param min: an int that is the min value we test for to find the next prime
+    :param n: asks for the nth prime in the sequence of primes from the min
+    :return: prime ints after min
+    :author: Jack
+    """
+    if (min < 1):
+        raise Exception("Next prime cannot take a minimum less than 1")
+
+    primes = next_n_primes(min, n)
+    return primes[n - 1]
+
+
+def next_n_primes(min: int, n: int) -> list[int]:
+    """
+    Finds the next n number of primes from the min
+
+    :param min: an int that is the min value we test for to find the next prime
+    :param n: n number of primes to find
     :return: a prime int
     :author: Jack
     """
-    pass
+    if (min < 1):
+        raise Exception("Next prime cannot take a minimum less than 1")
+
+    n += 1 # for zero indexing
+    i = 0
+    num = min + 1
+    primes = []
+
+    while i < n:
+        if prime(num):
+            primes.append(num)
+            i += 1
+        
+        num += 1
+
+    return primes
+
+
+def find_prime(max: int, min: int) -> int:
+    """
+    Finds a random prime between two numbers, inclusive as long as the endpoints are prime
+
+    :param max: max value to check between
+    :param min: min value to check between
+    :return: a prime int
+    :author: Jack
+    """
+    rand_nth = random.randint(0, 6)
+    rand_primes = next_n_primes(min, rand_nth)
+
+    for i in range(len(rand_primes) - 1, -1, -1):
+        prime = rand_primes[i]
+        if prime < max:
+            return prime
+
+    raise Exception(f"find_prime: invalid arguments passed, no primes between the given min ({min}) and max values ({max})")
+
+
+def factorize(a, n):
+    """
+    Factorizes the expression (a * t) mod n == 1 to find t.
+
+    :return: t or -1 if a is not invertible
+    :author: Lucas
+    """
+    t = 0
+    r = n
+
+    new_t = 1
+    new_r = a
+    while new_r != 0:
+        quotient = int(r / new_r)
+        t, new_t = (new_t, t - quotient * new_t)
+        r, new_r = (new_r, r - quotient * new_r)
+
+    if r > 1:
+        return -1
+    if t < 0:
+        t += n
+
+    return t
 
 
 main()
