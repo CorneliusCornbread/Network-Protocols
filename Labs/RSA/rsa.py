@@ -54,6 +54,7 @@ MAX_PRIME = 0b11111111  # The maximum value a prime number can have
 MIN_PRIME = 0b11000001  # The minimum value a prime number can have 
 PUBLIC_EXPONENT = 17  # The default public exponent
 
+import random
 
 # ---------------------------------------
 # Do not modify code below this line
@@ -329,7 +330,7 @@ def create_keys():
     return e, d, n
 
 
-def apply_key(key, m):
+def apply_key(key: tuple[int, int], m: int) -> int:
     """
     Apply the key, given as a tuple (e,n) or (d,n) to the message.
 
@@ -342,7 +343,10 @@ def apply_key(key, m):
              and returns the ciphertext.
     :author: Jack
     """
-    pass  # Delete this line and complete this method
+    n = key[1]
+    ed = key[0]
+
+    return m**ed % n
 
 
 def break_key(pub):
@@ -373,7 +377,7 @@ def break_key(pub):
 # Add additional functions here, if needed.
 
 
-def prime(n : int) -> bool:
+def prime(n: int) -> bool:
     """
     Determines if n is prime
 
@@ -391,12 +395,28 @@ def prime(n : int) -> bool:
     return True
 
 
-def next_prime(min: int, n : int):
+def next_prime(min: int, n: int) -> int:
     """
     Finds the next prime within the min value.
 
     :param min: an int that is the min value we test for to find the next prime
     :param n: asks for the nth prime in the sequence of primes from the min
+    :return: prime ints after min
+    :author: Jack
+    """
+    if (min < 1):
+        raise Exception("Next prime cannot take a minimum less than 1")
+
+    primes = next_n_primes(min, n)
+    return primes[n - 1]
+
+
+def next_n_primes(min: int, n: int) -> list[int]:
+    """
+    Finds the next n number of primes from the min
+
+    :param min: an int that is the min value we test for to find the next prime
+    :param n: n number of primes to find
     :return: a prime int
     :author: Jack
     """
@@ -409,51 +429,33 @@ def next_prime(min: int, n : int):
     primes = []
 
     while i < n:
-        for j in range(2,num):
-            if num % j == 0:
-                num += 1
-            else:
-                i += 1
-                num += 1
-                primes.append(num)
+        if prime(num):
+            primes.append(num)
+            i += 1
+        
+        num += 1
 
-    primes[n - 1]
-
-
-"""
-prime = [True for i in range(min + 1)]
-    p = 2
-    while (p * p <= min):
-        if (prime[p] == True):
-            for i in range(p * p, min + 1, p):
-                prime[i] = False
-        p += 1
-  
-    primes = []
-
-    for p in range(2, min+1):
-        if prime[p]:
-            primes.append(p)
-  
-
-    if len(primes) == 0:
-        return -1
-    elif len(primes) < n:
-        return primes[-1]
-    
-    return primes[-n]
-"""    
+    return primes
 
 
 def find_prime(max: int, min: int) -> int:
     """
-    Finds a prime with the max being the max bits to test for.
+    Finds a random prime between two numbers, inclusive as long as the endpoints are prime
 
-    :param max: an int that is the max number of bits that we can test up to for finding a prime
+    :param max: max value to check between
+    :param min: min value to check between
     :return: a prime int
     :author: Jack
     """
-    pass
+    rand_nth = random.randint(0, 6)
+    rand_primes = next_n_primes(min, rand_nth)
+
+    for i in range(len(rand_primes) - 1, -1, -1):
+        prime = rand_primes[i]
+        if prime < max:
+            return prime
+
+    raise Exception(f"find_prime: invalid arguments passed, no primes between the given min ({min}) and max values ({max})")
 
 
 def factorize(a, n):
