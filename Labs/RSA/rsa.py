@@ -19,12 +19,23 @@ Introduction: (Describe the lab in your own words)
 Question 1: RSA Security
 In this lab, Trudy is able to find the private key from the public key. Why is this not a problem for RSA in practice?
 
+In a real circumstance of an RSA with 2048 or 4096 bits, finding the private key would require finding the beginning
+p and q value. This is because to find the private key you must know the value of z, and within the value z contains
+p and q. Using math to figure out the p and q values within n = p*q becomes challenging when working with very large numbers like
+the ones present in a 2048-bit or 4096-bit RSA. This along with factorization helps make RSA a secure encryption.
+
+
 
 
 
 
 Question 2: Critical Step(s)
-When creating a key, Bob follows certain steps. Trudy follows other steps to break a key. What is the difference between Bob’s steps and Trudy’s so that Bob is able to run his steps on large numbers, but Trudy cannot run her steps on large numbers?
+When creating a key, Bob follows certain steps. Trudy follows other steps to break a key.
+What is the difference between Bob’s steps and Trudy’s so that Bob is able to run his steps on large numbers, but Trudy cannot run her steps on large numbers?
+
+One difference between the steps of creating and breaking keys is that Trudy does not know the p and q value while trying to break the
+keys, but Bob does. This step is difficult to be done with large numbers because the person breaking the key will have to factor the large
+number in order to find the p and q values.
 
 
 
