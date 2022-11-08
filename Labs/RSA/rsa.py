@@ -1,8 +1,7 @@
 """
-- NOTE: REPLACE 'N' Below with your section, year, and lab number
-- CS2911 - 0NN
-- Fall 202N
-- Lab N
+- CS2911 - 011
+- Fall 2022
+- Lab 2
 - Names:
   - Jack - Worked on simple functions
   - Lucas - Worked on complex math functions
@@ -11,8 +10,8 @@
 16-bit RSA
 
 Introduction: (Describe the lab in your own words)
-
-
+Create an implmentation for RSA encryption in Python. Test it by creating a key, encrypting and decrypting data
+and brute forcing a key.
 
 
 
@@ -68,10 +67,10 @@ Checksum 4:
 
 
 Summary: (Summarize your experience with the lab, what you learned, what you liked,what you disliked, and any suggestions you have for improvement)
-I learned the basics of RSA and how to break keys within a small encryption. 
 
-
-
+Lots of complex maths and concepts which made this lab challenging. Nonetheless a very interesting and fun lab to work on however.
+The lab helped a ton with understanding the maths for RSA. If I were to give a suggestion, during instruction I found the notation "mod(N)" confusing as I'm
+used to seeing the modulus symbol '%', otherwise it seems like modulus is a function of N.
 
 """
 
