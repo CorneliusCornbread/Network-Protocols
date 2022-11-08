@@ -43,12 +43,32 @@ number in order to find the p and q values.
 Checksum Activity:
 Provide a discussion of your experiences as described in the activity.  Be sure to answer all questions.
 
+Checksum 1:
+    public key: (17, 45173)
+    private key: (10529, 45173)
+    Hash: 069e
+    encrypted Hash: 42b8
+
+Checksum 2:
+    Public key: (17, 53357)
+    Private key: (46673, 53357)
+    message: Bob owes Trudy $900.91
+    Hash: 069e
+    encrypted Hash: 075b
+
+Checksum 3:
+    The message was verified after running the program
+
+Checksum 4:
+    One way trudy is prevented from doing this in a real scenario is she most likely won't know the private keys, or
+    there is a certificate facilitator that makes the exchange more secure.
+
 
 
 
 
 Summary: (Summarize your experience with the lab, what you learned, what you liked,what you disliked, and any suggestions you have for improvement)
-
+I learned the basics of RSA and how to break keys within a small encryption. 
 
 
 
