@@ -400,14 +400,56 @@ def next_prime(min: int, n : int):
     :return: a prime int
     :author: Jack
     """
-    pass
+    if (min < 1):
+        raise Exception("Next prime cannot take a minimum less than 1")
+
+    n += 1 # for zero indexing
+    i = 0
+    num = min + 1
+    primes = []
+
+    while i < n:
+        for j in range(2,num):
+            if num % j == 0:
+                num += 1
+            else:
+                i += 1
+                num += 1
+                primes.append(num)
+
+    primes[n - 1]
+
+
+"""
+prime = [True for i in range(min + 1)]
+    p = 2
+    while (p * p <= min):
+        if (prime[p] == True):
+            for i in range(p * p, min + 1, p):
+                prime[i] = False
+        p += 1
+  
+    primes = []
+
+    for p in range(2, min+1):
+        if prime[p]:
+            primes.append(p)
+  
+
+    if len(primes) == 0:
+        return -1
+    elif len(primes) < n:
+        return primes[-1]
+    
+    return primes[-n]
+"""    
 
 
 def find_prime(max: int, min: int) -> int:
     """
-    Finds a prime with the max being the max value to test for.
+    Finds a prime with the max being the max bits to test for.
 
-    :param max: an int that is the max value that we can test up to for finding a prime
+    :param max: an int that is the max number of bits that we can test up to for finding a prime
     :return: a prime int
     :author: Jack
     """
