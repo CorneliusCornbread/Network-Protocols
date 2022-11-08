@@ -26,8 +26,6 @@ the ones present in a 2048-bit or 4096-bit RSA. This along with factorization he
 
 
 
-
-
 Question 2: Critical Step(s)
 When creating a key, Bob follows certain steps. Trudy follows other steps to break a key.
 What is the difference between Bob’s steps and Trudy’s so that Bob is able to run his steps on large numbers, but Trudy cannot run her steps on large numbers?
@@ -61,8 +59,6 @@ Checksum 3:
 Checksum 4:
     One way trudy is prevented from doing this in a real scenario is she most likely won't know the private keys, or
     there is a certificate facilitator that makes the exchange more secure.
-
-
 
 
 
