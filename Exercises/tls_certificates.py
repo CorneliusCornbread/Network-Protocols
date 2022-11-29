@@ -2,9 +2,10 @@ import ssl
 import pprint
 import socket
 
-HOSTNAME = 'faculty-web.msoe.edu'
+HOSTNAME = 'expired.badssl.com'
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+sock.connect((HOSTNAME, 443))
 
 context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
 
@@ -32,6 +33,5 @@ context.check_hostname = True
 context.load_default_certs(ssl.Purpose.SERVER_AUTH)
 
 ssl_socket = context.wrap_socket(sock, server_hostname=HOSTNAME)
-ssl_socket.connect((HOSTNAME, 443))
 
 print(pprint.pformat(ssl_socket.getpeercert()))
